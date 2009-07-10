@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+
+require 'trollop'
+
+Dir[File.join(File.dirname(__FILE__), '..', 'lib', '*.rb')].each do |file|
+  require file
+end
+
+opts = Trollop::options do
+  opt :input,  "input file (default: STDIN)", :type => :string
+  opt :output, "output directory (default: pwd)", :type => :string
+  opt :graphics, "generate graphics", :default => true
+end
+
+input_file = opts[:input] || STDIN
+output_dir = opts[:output] || Dir.pwd
+
+
