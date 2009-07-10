@@ -9,11 +9,11 @@ end
 opts = Trollop::options do
   opt :input,  "input file (default: STDIN)", :type => :string
   opt :output, "output directory (default: pwd)", :type => :string
-  opt :graphs, "generate graphs", :default => true
+  opt :graphs, "generate graphs", :default => false
   opt :csv, "generate CSV", :default => false
 end
 
-input_file = opts[:input] || STDIN
+input_file = opts[:input].nil? ? STDIN : open(opts[:input])
 output_dir = opts[:output] || Dir.pwd
 
 pwd_stats = PwdumpAnalysis::Stats.new(input_file, output_dir)
