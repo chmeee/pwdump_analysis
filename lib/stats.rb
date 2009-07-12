@@ -58,15 +58,15 @@ class Stats
     puts "-------[ PWDUMP analysis ]-------"
     print_one_stat "Found",           @found_cnt
     print_one_stat "Not found",       @pwds.length - @found_cnt
-    print_one_stat "Total",           @pwds.length
+    print_one_stat "Total",           @pwds.length, false
     puts "---------------------------------"
-    print_one_stat "id == pwd",       @same_id_cnt
-    print_one_stat "id != pwd",       @pwds.length - @same_id_cnt
+    print_one_stat "id == pwd",       @same_id_cnt, @found_cnt
+    print_one_stat "id != pwd",       @found_cnt - @same_id_cnt, @found_cnt
     puts "---------------------------------"
-    print_one_stat "Alphabetic",      @alpha_cnt
-    print_one_stat "Numeric",         @num_cnt
-    print_one_stat "Alphanum",        @alphanum_cnt
-    print_one_stat "Other",           @found_cnt - (@alpha_cnt + @num_cnt + @alphanum_cnt)
+    print_one_stat "Alphabetic",      @alpha_cnt, @found_cnt
+    print_one_stat "Numeric",         @num_cnt, @found_cnt
+    print_one_stat "Alphanum",        @alphanum_cnt, @found_cnt
+    print_one_stat "Other",           @found_cnt - (@alpha_cnt + @num_cnt + @alphanum_cnt), @found_cnt
     puts "---------------------------------"
     print_one_stat "Max uid length",  @uid_max_length, false
     print_one_stat "Min uid length",  @uid_min_length, false
@@ -85,7 +85,9 @@ class Stats
 
   def generate_graphs 
     require 'chartdirector'
-    dualhbar
+
+    pwd_length_chart
+    pwd_stats_chart
   end
 
   def generate_csv 
@@ -94,7 +96,7 @@ class Stats
     puts  "[DONE]"
   end
 
-  def dualhbar
+  def pwd_length_chart
     labels = ([@pwd_min_length, @uid_min_length].min..[@pwd_max_length, @uid_max_length].max).to_a
     uid = labels.map { |e| @uid_hist[e] }
     pwd = labels.map { |e| @pwd_hist[e] }
@@ -126,7 +128,7 @@ class Stats
       ChartDirector::Transparent, ChartDirector::Transparent,
       ChartDirector::Transparent, ChartDirector::Transparent)
 
-    c_uid.addText(20, 0, "uid", "timesbi.ttf", 12, 0xa07070)
+    c_uid.addText(20, 0, "uid", "timesbi.ttf", 12, 0xaaaaff)
     uidLayer = c_uid.addBarLayer(uid, 0xaaaaff)
     c_uid.swapXY(true)
     c_uid.yAxis().setReverse()
@@ -144,6 +146,73 @@ class Stats
     m.addChart(270, 25, c_pwd)
     m.addChart(0, 25, c_uid)
     m.makeChart("uid_pwd_length.png")
+  end
+  def pwd_stats_chart
+    c_found = ChartDirector::XYChart.new(630, 150)
+    c_found.setPlotArea(50, 0, 550, 130, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent)
+    c_found.swapXY(true)
+    found_layer = c_found.addBarLayer2(ChartDirector::Stack)
+    found_layer.addDataSet([@found_cnt], 0xddaa77, "Found")
+    found_layer.addDataSet([@pwds.length - @found_cnt], 0xaadd77, "Not found")
+    found_layer.setBorderColor(ChartDirector::Transparent)
+    found_layer.setDataLabelFormat("{value} ({percent}%)")
+    found_layer.setDataLabelStyle().setAlignment(ChartDirector::Center)
+
+    legendBox = c_found.addLegend(540, 10, true, "LiberationSans-Bold.ttf", 8)
+    legendBox.setKeyBorder(ChartDirector::Transparent)
+    legendBox.setBackground(ChartDirector::Transparent, ChartDirector::Transparent)
+
+#    c_found.yAxis().setColors(ChartDirector::Transparent, ChartDirector::Transparent)
+#    c_found.makeChart("pwd_found.png")
+
+    c_same = ChartDirector::XYChart.new(630, 150)
+    c_same.setPlotArea(50, 0, 550, 130, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent)
+    c_same.swapXY(true)
+    same_layer = c_same.addBarLayer2(ChartDirector::Stack)
+    same_layer.addDataSet([@same_id_cnt], 0xddaa77, "id == pwd")
+    same_layer.addDataSet([@found_cnt - @same_id_cnt], 0xaadd77, "id != pwd")
+    same_layer.addDataSet([@pwds.length - @found_cnt], ChartDirector::Transparent)
+    same_layer.setBorderColor(ChartDirector::Transparent)
+    same_layer.setDataLabelFormat("{value} ({percent}%)")
+    same_layer.setDataLabelStyle().setAlignment(ChartDirector::Center)
+
+    legendBox = c_same.addLegend(540, 10, true, "LiberationSans-Bold.ttf", 8)
+    legendBox.setKeyBorder(ChartDirector::Transparent)
+    legendBox.setBackground(ChartDirector::Transparent, ChartDirector::Transparent)
+
+#    c_same.makeChart("same_id.png")
+
+    c_quality = ChartDirector::XYChart.new(630, 150)
+    c_quality.setPlotArea(50, 0, 550, 130, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent,
+      ChartDirector::Transparent, ChartDirector::Transparent)
+    c_quality.swapXY(true)
+    quality_layer = c_quality.addBarLayer2(ChartDirector::Stack)
+    quality_layer.addDataSet([@alpha_cnt], 0xddaa77, "Alphabetic")
+    quality_layer.addDataSet([@num_cnt], 0xffff99, "Numeric")
+    quality_layer.addDataSet([@alphanum_cnt], 0xffff33, "Alphanumeric")
+    quality_layer.addDataSet([@found_cnt - (@alpha_cnt + @num_cnt + @alphanum_cnt)], 0xaadd77, "Other")
+    quality_layer.addDataSet([@pwds.length - @found_cnt], ChartDirector::Transparent)
+    quality_layer.setBorderColor(ChartDirector::Transparent)
+    quality_layer.setDataLabelFormat("{value} ({percent}%)")
+    quality_layer.setDataLabelStyle().setAlignment(ChartDirector::Center)
+
+    legendBox = c_quality.addLegend(540, 10, true, "LiberationSans-Bold.ttf", 8)
+    legendBox.setKeyBorder(ChartDirector::Transparent)
+    legendBox.setBackground(ChartDirector::Transparent, ChartDirector::Transparent)
+    
+#    c_quality.makeChart("pwd_quality.png")
+
+    m = ChartDirector::MultiChart.new(690, 620)
+    m.addTitle("PWDUMP analysis", "arialbi.ttf")
+    m.addChart(0, 25, c_found)
+    m.addChart(0, 225, c_same)
+    m.addChart(0, 425, c_quality)
+    m.makeChart("pwd_stats.png")
   end
 end
 
