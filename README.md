@@ -1,7 +1,9 @@
 # PWDUMP Analysis #
 
 This is a tool to extract information from pwdump-style files from Windows after
-being cracked with [ophcrack][http://ophcrack.sourceforge.net]
+being cracked with [ophcrack][1]
+
+  [1]: http://ophcrack.sourceforge.net
 
 ## TODO ##
 
