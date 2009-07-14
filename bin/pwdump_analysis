@@ -11,13 +11,21 @@ opts = Trollop::options do
   opt :output, "output directory (default: pwd)", :type => :string
   opt :graphs, "generate graphs", :default => false
   opt :csv, "generate CSV", :default => false
+  opt :nt_hash, "generate hash from string", :type => :string
 end
 
-input_file = opts[:input].nil? ? STDIN : open(opts[:input])
-output_dir = opts[:output] || Dir.pwd
+if !opts[:nt_hash]
+  input_file = opts[:input].nil? ? STDIN : open(opts[:input])
+  output_dir = opts[:output] || Dir.pwd
 
-pwd_stats = PwdumpAnalysis::Stats.new(input_file, output_dir)
+  pwd_stats = PwdumpAnalysis::Stats.new(input_file, output_dir)
 
-pwd_stats.print_stats
-pwd_stats.generate_graphs if opts[:graphs]
-pwd_stats.generate_csv    if opts[:csv]
+  pwd_stats.print_stats
+  pwd_stats.generate_graphs if opts[:graphs]
+  pwd_stats.generate_csv    if opts[:csv]
+else
+  require 'openssl'
+  require 'iconv'
+
+  puts OpenSSL::Digest::MD4.hexdigest(Iconv.iconv("UCS-2", "UTF-8", opts[:nt_hash]).join).upcase
+end
