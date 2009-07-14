@@ -1,14 +1,7 @@
 module PwdumpAnalysis
 
 class Stats
-  def initialize(input_file, output_dir)
-    @pwds = Array.new
-
-#    @pwd_max_length = 0
-#    @pwd_min_length = 0
-#    @uid_max_length = 0
-#    @uid_min_length = 0
-
+  def initialize(pwdump, output_dir)
     @alpha_cnt      = 0
     @num_cnt        = 0
     @alphanum_cnt   = 0
@@ -18,47 +11,44 @@ class Stats
     @pwd_hist = Hash.new
     @uid_hist = Hash.new
 
-    @input_file = input_file
     @output_dir = output_dir
 
-    scan_file
+    @pwdump = pwdump
+
+    analyze_dump
   end
 
-  def scan_file
-      @input_file.each do |line|
-        pass = Password.new(line)
+  def analyze_dump
+    @pwdump.each do |pass|
+      if pass.decrypted?
+        @pwd_hist[pass.pwd_length] = (@pwd_hist[pass.pwd_length].nil?) ? 1 : @pwd_hist[pass.pwd_length] + 1
+        @uid_hist[pass.uid_length] = (@uid_hist[pass.uid_length].nil?) ? 1 : @uid_hist[pass.uid_length] + 1
 
-        @pwds << pass
+        @alpha_cnt      += 1 if pass.is_alpha?
+        @num_cnt        += 1 if pass.is_num?
+        @alphanum_cnt   += 1 if pass.is_alphanum?
+        @same_id_cnt    += 1 if pass.same_id?
 
-        if pass.decrypted?
-          @pwd_hist[pass.pwd_length] = (@pwd_hist[pass.pwd_length].nil?) ? 1 : @pwd_hist[pass.pwd_length] + 1
-          @uid_hist[pass.uid_length] = (@uid_hist[pass.uid_length].nil?) ? 1 : @uid_hist[pass.uid_length] + 1
+        @pwd_max_length = 
+          (@pwd_max_length.nil? or pass.pwd_length > @pwd_max_length) ? pass.pwd_length : @pwd_max_length
+        @pwd_min_length = 
+          (@pwd_min_length.nil? or pass.pwd_length < @pwd_min_length) ? pass.pwd_length : @pwd_min_length
+        @uid_max_length = 
+          (@uid_max_length.nil? or pass.uid_length > @uid_max_length) ? pass.uid_length : @uid_max_length
+        @uid_min_length = 
+          (@uid_min_length.nil? or pass.uid_length < @uid_min_length) ? pass.uid_length : @uid_min_length
 
-          @alpha_cnt      += 1 if pass.is_alpha?
-          @num_cnt        += 1 if pass.is_num?
-          @alphanum_cnt   += 1 if pass.is_alphanum?
-          @same_id_cnt    += 1 if pass.same_id?
-
-          @pwd_max_length = 
-            (@pwd_max_length.nil? or pass.pwd_length > @pwd_max_length) ? pass.pwd_length : @pwd_max_length
-          @pwd_min_length = 
-            (@pwd_min_length.nil? or pass.pwd_length < @pwd_min_length) ? pass.pwd_length : @pwd_min_length
-          @uid_max_length = 
-            (@uid_max_length.nil? or pass.uid_length > @uid_max_length) ? pass.uid_length : @uid_max_length
-          @uid_min_length = 
-            (@uid_min_length.nil? or pass.uid_length < @uid_min_length) ? pass.uid_length : @uid_min_length
-
-          @found_cnt += 1
-        end
+        @found_cnt += 1
       end
-
+    end
   end
+
 
   def print_stats
     puts "-------[ PWDUMP analysis ]-------"
     print_one_stat "Found",           @found_cnt
-    print_one_stat "Not found",       @pwds.length - @found_cnt
-    print_one_stat "Total",           @pwds.length, false
+    print_one_stat "Not found",       @pwdump.count - @found_cnt
+    print_one_stat "Total",           @pwdump.count, false
     puts "---------------------------------"
     print_one_stat "id == pwd",       @same_id_cnt, @found_cnt
     print_one_stat "id != pwd",       @found_cnt - @same_id_cnt, @found_cnt
@@ -72,11 +62,11 @@ class Stats
     print_one_stat "Min uid length",  @uid_min_length, false
     print_one_stat "Max pwd length",  @pwd_max_length, false
     print_one_stat "Min pwd length",  @pwd_min_length, false
-    print_one_stat "Mean pwd length", @pwd_hist.keys.inject { |sum, k| sum+k*@pwd_hist[k] }.to_f / @pwds.length
+    print_one_stat "Mean pwd length", @pwd_hist.keys.inject { |sum, k| sum+k*@pwd_hist[k] }.to_f / @pwdump.count
     puts "---------------------------------"
   end
 
-  def print_one_stat(text, value, total=@pwds.length)
+  def print_one_stat(text, value, total=@pwdump.count)
     if total == false
       printf " %-15s %5d\n", text+":", value
     elsif value.is_a?(Float)
@@ -173,17 +163,17 @@ class Stats
 
   def pwd_stats_chart
     c_found = hbar_chart    [ [[@found_cnt], 0xddaa77, "Found"], 
-                              [[@pwds.length - @found_cnt], 0xaadd77, "Not found"] ]
+                              [[@pwdump.count - @found_cnt], 0xaadd77, "Not found"] ]
 
     c_same = hbar_chart     [ [[@same_id_cnt], 0xddaa77, "id == pwd"],
                               [[@found_cnt - @same_id_cnt], 0xaadd77, "id != pwd"],
-                              [[@pwds.length - @found_cnt], ChartDirector::Transparent] ]
+                              [[@pwdump.count - @found_cnt], ChartDirector::Transparent] ]
 
     c_quality = hbar_chart  [ [[@alpha_cnt], 0xddaa77, "Alphabetic"],
                               [[@num_cnt], 0xffff99, "Numeric"],
                               [[@alphanum_cnt], 0xffff33, "Alphanumeric"],
                               [[@found_cnt - (@alpha_cnt + @num_cnt + @alphanum_cnt)], 0xaadd77, "Other"],
-                              [[@pwds.length - @found_cnt], ChartDirector::Transparent] ]
+                              [[@pwdump.count - @found_cnt], ChartDirector::Transparent] ]
 
     m = ChartDirector::MultiChart.new(690, 620)
     m.addTitle("PWDUMP analysis", "arialbi.ttf")

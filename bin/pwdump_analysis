@@ -18,7 +18,8 @@ if !opts[:nt_hash]
   input_file = opts[:input].nil? ? STDIN : open(opts[:input])
   output_dir = opts[:output] || Dir.pwd
 
-  pwd_stats = PwdumpAnalysis::Stats.new(input_file, output_dir)
+  pwdump = PwdumpAnalysis::Dump.new(input_file)
+  pwd_stats = PwdumpAnalysis::Stats.new(pwdump, output_dir)
 
   pwd_stats.print_stats
   pwd_stats.generate_graphs if opts[:graphs]
