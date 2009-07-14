@@ -56,4 +56,4 @@ Output
 * Change hash password generation and include LM hash also
 * Add capability to check certain passwords for certain users from a crafted
 file
-
+* Add comments!!!

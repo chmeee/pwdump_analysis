@@ -1,6 +1,8 @@
 module PwdumpAnalysis
 
 class Password
+  attr_reader :uid
+
   def initialize(line)
     @lm_pwd  = Array.new
 
@@ -11,6 +13,14 @@ class Password
     else
       @nt_pwd.chomp!
     end
+  end
+
+  def pwd
+    @nt_pwd
+  end
+
+  def pwd=(pwd)
+    @nt_pwd = pwd
   end
 
   def is_alpha?
@@ -39,6 +49,10 @@ class Password
 
   def same_id?
     @uid == @nt_pwd
+  end
+
+  def to_s
+    [@uid, @id, @lm_hash, @nt_hash, @lm_pwd[0], @lm_pwd[1], @nt_pwd].join(':')
   end
 
 end
