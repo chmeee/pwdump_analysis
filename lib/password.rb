@@ -1,7 +1,7 @@
 module PwdumpAnalysis
 
 class Password
-  attr_reader :uid
+  attr_reader :uid, :nt_hash
 
   def initialize(line)
     @lm_pwd  = Array.new
@@ -55,6 +55,16 @@ class Password
     [@uid, @id, @lm_hash, @nt_hash, @lm_pwd[0], @lm_pwd[1], @nt_pwd].join(':')
   end
 
+  def self.nt_hash(nt_pwd)
+    require 'openssl'
+    require 'iconv'
+
+    OpenSSL::Digest::MD4.hexdigest(Iconv.iconv("UCS-2", "UTF-8", nt_pwd).join).upcase
+  end
+
+  def correct_pwd?
+    Password.nt_hash(@nt_pwd) == @nt_hash
+  end
 end
 
 end

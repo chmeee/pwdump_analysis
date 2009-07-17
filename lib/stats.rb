@@ -84,9 +84,10 @@ class Stats
   end
 
   def generate_csv 
-    print "generating graphs..."
+    
+    
 
-    puts  "[DONE]"
+
   end
 
   def pwd_length_chart

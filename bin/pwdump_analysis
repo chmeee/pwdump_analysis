@@ -12,21 +12,42 @@ opts = Trollop::options do
   opt :graphs, "generate graphs", :default => false
   opt :csv, "generate CSV", :default => false
   opt :nt_hash, "generate hash from string", :type => :string
+  opt :not_found, "file with passwords not found, with guesses", :type => :string
+  opt :modify, "modifies the original file if :not_found, otherwise creates a file with -not_found", :default => false
+  opt :verbose, "prints more information", :defualt => false
 end
 
-if !opts[:nt_hash]
+# Actualiza el @pwds con los nuevos datos, calcula de nuevo las estadisticas y/o los gráficos
+# Y modifica el fichero si se le pone un switch
+
+if opts[:nt_hash]
+  puts PwdumpAnalysis::Password.nt_hash opts[:nt_hash]
+else
+  not_found_file = open(opts[:not_found]) if opts[:not_found]
+
   input_file = opts[:input].nil? ? STDIN : open(opts[:input])
   output_dir = opts[:output] || Dir.pwd
 
   pwdump = PwdumpAnalysis::Dump.new(input_file)
+
+  if not not_found_file.nil?
+    nf_pwdump = PwdumpAnalysis::Dump.new(not_found_file)
+    pwdump.merge(nf_pwdump, opts[:verbose])
+    
+    if opts[:modify] and opts[:input]
+      output_file = open(opts[:input], "w")
+    elsif not opts[:modify] and opts[:input]
+      output_file = open(opts[:input] + "-not_found", "w")
+    else
+      output_file = STDOUT
+    end
+
+    pwdump.to_file(output_file)
+  end
+
   pwd_stats = PwdumpAnalysis::Stats.new(pwdump, output_dir)
 
   pwd_stats.print_stats
   pwd_stats.generate_graphs if opts[:graphs]
   pwd_stats.generate_csv    if opts[:csv]
-else
-  require 'openssl'
-  require 'iconv'
-
-  puts OpenSSL::Digest::MD4.hexdigest(Iconv.iconv("UCS-2", "UTF-8", opts[:nt_hash]).join).upcase
 end
