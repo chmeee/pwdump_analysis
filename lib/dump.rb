@@ -49,6 +49,15 @@ class Dump
     end
   end
 
+  def list_not_found(file)
+    if file.is_a?(String)
+      file = open(file, "w")
+    end
+    @pwds.each do |pwd|
+      file.puts pwd unless pwd.decrypted?
+    end
+  end
+
 end
 
 end
