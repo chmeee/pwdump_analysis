@@ -84,10 +84,29 @@ class Stats
   end
 
   def generate_csv 
-    
-    
+    open(File.join(@output_dir, "uid_pwd_length.csv"), "w") do |file|
+      file.puts "length,uid_count,pwd_count"
+      ([@pwd_min_length, @uid_min_length].min..[@pwd_max_length, @uid_max_length].max).each do |k|
+        file.puts "#{k},#{@uid_hist[k] ? @uid_hist[k] : 0},#{@pwd_hist[k] ? @pwd_hist[k] : 0}"
+      end
+    end
 
-
+    open(File.join(@output_dir, "pwd_stats.csv"), "w") do |file|
+      file.puts "Found,#{@found_cnt}"
+      file.puts "Not found,#{@pwdump.count - @found_cnt}"
+      file.puts "Total,#{@pwdump.count}"
+      file.puts "id == pwd,#{@same_id_cnt}"
+      file.puts "id != pwd,#{@found_cnt - @same_id_cnt}"
+      file.puts "Alphabetic,#{@alpha_cnt}"
+      file.puts "Numeric,#{@num_cnt}"
+      file.puts "Alphanum,#{@alphanum_cnt}"
+      file.puts "Other,#{@found_cnt - (@alpha_cnt + @num_cnt + @alphanum_cnt)}"
+      file.puts "Max uid length,#{@uid_max_length}"
+      file.puts "Min uid length,#{@uid_min_length}"
+      file.puts "Max pwd length,#{@pwd_max_length}"
+      file.puts "Min pwd length,#{@pwd_min_length}"
+      file.puts "Mean pwd length,#{@pwd_hist.keys.inject { |sum, k| sum+k*@pwd_hist[k] }.to_f / @pwdump.count}"
+    end
   end
 
   def pwd_length_chart
@@ -139,7 +158,7 @@ class Stats
     m.addTitle("PWDUMP analysis", "arialbi.ttf")
     m.addChart(270, 25, c_pwd)
     m.addChart(0, 25, c_uid)
-    m.makeChart("uid_pwd_length.png")
+    m.makeChart(File.join(@output_dir, "uid_pwd_length.png"))
   end
 
   def hbar_chart(chart_data)
@@ -181,7 +200,7 @@ class Stats
     m.addChart(0, 25, c_found)
     m.addChart(0, 225, c_same)
     m.addChart(0, 425, c_quality)
-    m.makeChart("pwd_stats.png")
+    m.makeChart(File.join(@output_dir, "pwd_stats.png"))
   end
 end
 
