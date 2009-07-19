@@ -33,17 +33,19 @@ you do you'll have to tell ruby so. The best way I think is through
 
 ### Help ###
 
-    $ pwdump_analysis -h
     Options:
-        --input, -i <s>:   input file (default: STDIN)
-       --output, -o <s>:   output directory (default: pwd)
-           --graphs, -g:   generate graphs
-              --csv, -c:   generate CSV
-      --nt-hash, -n <s>:   generate hash from string
-    --not-found, -t <s>:   file with passwords not found, with guesses
-           --modify, -m:   modifies the original file if :not_found, otherwise creates a file with -not_found
-          --verbose, -v:   prints more information
-             --help, -h:   Show this message
+          --input, -i <s>:   input file (default: STDIN)
+         --output, -o <s>:   output directory (default: pwd)
+             --graphs, -g:   generate graphs
+                --csv, -c:   generate CSV
+        --nt-hash, -n <s>:   generate hash from string
+      --not-found, -t <s>:   file with passwords not found, with guesses
+             --modify, -m:   modifies the original file if :not_found, otherwise
+                             creates a file with -new
+            --verbose, -v:   prints more information
+            --list-nf, -l:   list not found passwords
+               --help, -h:   Show this message
+
 
 ### Simple usage ###
 

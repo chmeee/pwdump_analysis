@@ -13,7 +13,7 @@ opts = Trollop::options do
   opt :csv, "generate CSV", :default => false
   opt :nt_hash, "generate hash from string", :type => :string
   opt :not_found, "file with passwords not found, with guesses", :type => :string
-  opt :modify, "modifies the original file if :not_found, otherwise creates a file with -not_found", :default => false
+  opt :modify, "modifies the original file if :not_found, otherwise creates a file with -new", :default => false
   opt :verbose, "prints more information", :defualt => false
   opt :list_nf, "list not found passwords", :default => false
 end
