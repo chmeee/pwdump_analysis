@@ -45,7 +45,7 @@ else
 
     pwdump.to_file(output_file)
   elsif opts[:list_nf]
-    not_found_file = opts[:input] ? opts[:input] : STDOUT
+    not_found_file = opts[:input] ? opts[:input] + "-not_found" : STDOUT
     pwdump.list_not_found(not_found_file)
   end
 
